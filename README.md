@@ -1,4 +1,4 @@
-# Agent Builder Template
+# Outcomes Analyst
 
 A starter folder for building your own AI **agent** in any AI-enabled code editor —
 **no coding required**. You build the whole thing just by chatting with an AI assistant.
