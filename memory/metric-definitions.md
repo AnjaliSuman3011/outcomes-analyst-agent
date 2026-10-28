@@ -26,17 +26,34 @@ Canonical source: stable card **7836** "All active JD's_2026" (production, Metab
 - Cutoff note: the older card 7325 (`posted_at >= 2024-10-01`) gives Oct 2025 = 90 vs 63 under
   7836; Oct 2026 = 64 either way. Months before Nov 2025 depend on the cutoff.
 
-## 2. Offers — NOT LOCKED
-- `user_outcome` (card 7832) Oct 2026 = 9 rows, Oct 2025 = 18; all have `hiring_request_id`
-  and all `job_application_source = CRIO_REFERRAL`. So it holds **Crio offers only**; the 9 matches
-  "9 Crio". Self offers (expected 11) are NOT in this table — source still to find (likely LSQ).
-- 7832 filters: `user_id NOT REGEXP 'neill-criodo'`, `hiring_request.company_name NOT REGEXP 'crio'`;
-  placement date = `CONVERT_TZ(timestamp,'+00:00','+05:30')`.
-- Self offers search (Oct 2026): NOT found in `user_outcome` (only 4 SELF rows, all Jul 2024),
-  LSQ `Leads.mx_Last_Offer_Date`/`mx_Total_Offers` (empty since Jul 2026), or LSQ opportunity
-  fields (Self opps all at stage 'JD Received', no offered-profile counts). Untested leads:
-  `user_hiring_request.status = 'OFFERED'` (9 rows updated in Oct) and other LSQ ActivityEvents
-  (97, 202, 200, 21, 103, 203, 22).
+## 2. Offers (monthly) — LOCKED (v1, CRIO-ONLY)
+**Offers (v1) = Crio offers only.** Source: `user_outcome` on DB 69 (card 7832 logic).
+- **Count** = `user_outcome` rows whose `CONVERT_TZ(timestamp,'+00:00','+05:30')` falls in the month.
+  Join `hiring_request` on `hiring_request_id` for company/owner. Apply 7832's exclusions:
+  `user_id NOT REGEXP 'neill-criodo'` and `hiring_request.company_name NOT REGEXP 'crio'`
+  (test accounts). Oct 2026: 9 rows with or without the filters; all `job_application_source = CRIO_REFERRAL`,
+  all with a `hiring_request_id`.
+- **Oct 2026 = 9** (Crio).
+- **MANDATORY WORDING:** the agent must ALWAYS state that this is **Crio offers only** and that
+  **Self offers are not in any queryable source** -- they are tracked in the team's manual CS sheet and
+  must be added manually. NEVER present the Crio number as "total offers".
+- **Known context:** the team sheet shows Oct 2026 total = 20 (9 Crio + 11 Self). The 11 Self are
+  manual-only and out of scope for v1. The 9 Crio matches the database exactly.
+- **Upgrade path:** if a Self-offers source is ever found, Offers can become Crio + Self (kept as a
+  visible split) without changing any other metric.
+
+### Due-diligence trail (do not re-investigate from scratch)
+- `user_outcome` Oct 2026: 9 rows, all `CRIO_REFERRAL`, none with NULL `hiring_request_id`, so the
+  crio-regex filter in 7832 is NOT dropping Self offers. Only 4 `SELF` rows exist in the whole table,
+  all from Jul 2024 (all-time sources: CRIO_REFERRAL 620, CRIO_ASSISTED_APPLY 10, SELF 4, GEEKTRUST 1).
+- `user_hiring_request.status = 'OFFERED'` (9 rows updated in Oct 2026) = the SAME 9 user+JD pairs
+  and dates as `user_outcome` -- duplicate Crio data, not Self (checked both directions).
+- LSQ (DB 434): `Leads.mx_Last_Offer_Date` / `mx_Total_Offers` / `mx_Placed_Account` -- no rows with an
+  offer date since Jul 2026. Self opportunities (`mx_Custom_45 = 'Self'`) in Oct are all at stage
+  'JD Received' with no offered-profile counts (`mx_Custom_28`).
+- DB 69 has no table named like self/offer/placement besides `user_outcome` (and `activity_schedule_for_offering`, 5 rows, unrelated).
+- NOT investigated (deliberately deferred): other LSQ ActivityEvents seen in Oct (97, 202, 200, 21, 103,
+  203, 22). Only worth a look if someone can say which one means "offer".
 
 ## 3. Interview rounds — SQL fetched (card 7831), NOT LOCKED
 - Source `user_hiring_round` + `hiring_request`; excludes `user_id REGEXP '-crio'`, dummy company,
