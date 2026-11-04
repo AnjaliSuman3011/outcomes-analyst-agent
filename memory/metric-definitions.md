@@ -12,7 +12,8 @@ Canonical source: stable card **7836** "All active JD's_2026" (production, Metab
   `round_type != 'RESUME_SCREENING'`. Joins: `user_hiring_round` -> `hiring_request`
   (for `posted_at`), `user_hiring_round_aud`, `revinfo`.
 - **Monthly count** = JDs whose active date falls in that month.
-- Baseline filter: `hiring_request.posted_at >= '2025-10-01'` (as in 7836).
+- **Permanent cutoff:** `hiring_request.posted_at >= '2025-10-01'` (as in 7836). This is part of the
+  definition, not a tunable parameter. Do not swap in the older 2024-10-01 cutoff (card 7325).
 - **Exclude the test-company list:** "Dummy Company (CS Onboarding)", "test",
   "TIF labs (Fullstack)", "TEST_COMPANY", "test hr creation", "test child"
   (no effect on Oct counts, but always apply).
@@ -23,8 +24,35 @@ Canonical source: stable card **7836** "All active JD's_2026" (production, Metab
   is ~5% off. (Outcomes Dashboard 1231 has no Active JDs figure.)
 - **Backfill caveat:** active date is an audit-row timestamp, not `scheduled_at`. Bulk edits or
   backfills of round rows can move a JD into a different month. Mention when relevant.
-- Cutoff note: the older card 7325 (`posted_at >= 2024-10-01`) gives Oct 2025 = 90 vs 63 under
-  7836; Oct 2026 = 64 either way. Months before Nov 2025 depend on the cutoff.
+- **Oct 2025 = 63 is a boundary artifact of the cutoff, NOT a trend point** (it reads 90 under the older
+  2024-10-01 cutoff). JDs posted before 2025-10-01 are excluded by definition, so Oct 2025 is understated.
+  Never present it as a dip. First comparable month is Nov 2025. Oct 2026 is the same under either cutoff.
+- **Oct 2026 value history (grows while the month is open):** 64 (Oct 28 AM), 65 (Oct 28), 72 (Nov 4).
+  The "64" above was an as-of-Oct-28 figure; the completed month reads 72. State the as-of date.
+
+### Active-JD series, locked definition (queried Nov 4 2026)
+Oct-25 63* | Nov 117 | Dec 115 | Jan-26 136 | Feb 108 | Mar 115 | Apr 106 | May 103 | Jun 97 | Jul 98 |
+Aug 53 | Sep 65 | Oct 72.  (*boundary artifact)
+
+### Pipeline-break check for the Aug 2026 drop (Nov 4 2026) -- NO BREAK FOUND (INFERRED, not confirmed)
+Access limit: DB-read only via Metabase (no cron/job logs, scheduler status, or sheet timestamps), so this is
+a data-signature test. The active date is not set by a cron; it is derived at query time from
+`revinfo`/`user_hiring_round_aud` rows the app writes on each save. Tests run:
+- Audit writes alive: `revinfo` revisions 61k-76k/week every week Jun-Aug 2026 (no gap or hard stop); round and JD
+  audit rows present every week. Whole-platform audit volume drifted down (~70k/wk Jun-Jul to ~44-52k/wk Sep).
+- No JD with a scheduled non-RS round is missing its audit timestamp (sched-but-no-audit = 0 in every month).
+- Audit-based active month matches a scheduled_at-based first-activity month within +/-6 JDs every month
+  (Aug: 53 vs 54), so the audit flag does not diverge from the underlying schedule data.
+- Newly-active JDs appear on every weekday Jul 13-Aug 24; no gap. No bulk backfill: no two JDs share an
+  active-date minute anywhere Jun-Oct 2026.
+- The drop shows upstream too: JDs received 230 -> 145 (-37%), JDs with new qualifying rounds ~44/wk -> ~26/wk.
+- Activation (active / received) has no cliff: Jul 0.43, Aug 0.37, Sep 0.35, Oct 0.40 (range 0.33-0.50).
+
+## 1b. JD Received (monthly) -- PROVISIONAL PROXY, NOT LOCKED
+Proxy = `hiring_request` rows created in the month (IST), excluding the test-company list. (posted_at gives the
+same counts for Oct 2025-Oct 2026.) Not reconciled to any team figure. Series (Nov 4 2026):
+Oct-25 190 | Nov 257 | Dec 309 | Jan-26 308 | Feb 235 | Mar 262 | Apr 211 | May 240 | Jun 235 | Jul 230 |
+Aug 145 | Sep 185 | Oct 182.
 
 ## 2. Offers (monthly) — LOCKED (v1, CRIO-ONLY)
 **Offers (v1) = Crio offers only.** Source: `user_outcome` on DB 69 (card 7832 logic).
