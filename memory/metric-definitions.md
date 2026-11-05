@@ -2,6 +2,7 @@
 
 Data access: Metabase session login, MySQL read replica, DB id 69 (`tools/metabase_query.py`).
 LSQ (leads) lives in a **different Metabase DB, id 434** — use `--db 434` (access confirmed).
+LSQ Career Services (referral data) is **DB 437** — use `--db 437` (access confirmed Nov 6 2026).
 
 ## 1. Active JDs (monthly) — LOCKED (v1)
 Canonical source: stable card **7836** "All active JD's_2026" (production, Metabase DB 69).
@@ -132,4 +133,22 @@ Source: LSQ, Metabase **DB 434**, table `ProspectActivity_ExtensionBase` (card 7
 - Junk/Lost rows are not excluded (7 in Oct, immaterial; the sheet appears not to exclude them).
 - Card 5754 is an old 2024 DB-69 job_lead card and is NOT part of this metric.
 
-## 5. Total Users in Pool — no source found in any fetched card
+## 5. Total Users in Pool -- BLOCKED (access OK; no field reproduces 611 / 658 / 675)
+Rule given by the team: a student is in the Pool once referral-ready ("Date Referrals Started"); status
+(Looking/Paused/Placed) does not decide membership; cumulative, never summed across months.
+Sheet reference: Aug 611, Sep 658, Oct 675 (+47, +17).
+- **DB 437 is accessible** (`--db 437`, database `qiftsolutech_mxradon`, LSQ Career Services; added to the
+  tool's allowlist Nov 6 2026, still SELECT-only). Probed live: `SELECT 1` = 1.
+- Candidates tested (cumulative, distinct students, <= month-end) -- NONE reconcile:
+  | Candidate | Aug | Sep | Oct |
+  |---|---|---|---|
+  | Sheet (target) | 611 | 658 | 675 |
+  | LSQ activity event 230 "Referral Ready", first occurrence per prospect (437) | 1,569 | 1,659 | 1,732 |
+  | `Leads.mx_Referral_Age` -> start = today - age, distinct `mx_Crio_user_id` (437) | 2,701 | 2,851 | 3,110 |
+  Event 230 adds ~70-90 students/month; the sheet adds 47 then 17. Both candidates are 2.5-5x too large.
+- Facts: 437 `Leads.mx_Career_Services_Status` (Placed 1,839, Paused 901, Looking for Job 666, Pre-referral
+  Pause 191, Not Looking 69, ...; blank 11,271). ~3,264 students have a `mx_Referral_Age`. DB 437 has no status
+  history, so any status-based cut cannot be rebuilt for past months.
+- Conclusion: the pool in the sheet is a narrower population than "everyone ever referral-ready". Need the
+  exact membership rule/field (or the sheet's student list for one month) to find the missing filter.
+  Do NOT approximate Pool from the sheet.

@@ -115,11 +115,12 @@ numbers are reliable enough to use in reviews.
 
 **v1 scope — answers only these 5 questions:**
 1. **Leads Generated** in a month, split by channel (Manual / Bot / Self).
-2. **Active JDs** in a month, split by channel. Active JD ≠ JD Received (they differ ~2x) —
-   never substitute one for the other.
+2. **Active JDs** in a month (locked as a total; a channel split is NOT yet defined — open). Active JD ≠
+   JD Received (they differ ~2x) — never substitute one for the other.
 3. **Interview rounds:** R1 Completed, total R2, total R3-and-above.
 4. **Total Users in Pool** — a point-in-time snapshot; never sum across months.
-5. **Offers** = Crio offers + Self offers, always shown as a visible split.
+5. **Offers** = **Crio offers only** in v1 (Self offers are not in any queryable source). Always say so;
+   never call the figure "total offers".
 
 **Strictly read-only:** the agent only reads data. It never writes, updates, or deletes
 anything.

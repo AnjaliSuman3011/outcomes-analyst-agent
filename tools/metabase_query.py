@@ -5,9 +5,10 @@ Usage:
     python3 tools/metabase_query.py "SELECT 1"
     python3 tools/metabase_query.py --json "SELECT 1 AS ok"
     python3 tools/metabase_query.py --db 434 "SELECT 1"     # LSQ database
+    python3 tools/metabase_query.py --db 437 "SELECT 1"     # LSQ Career Services database
 
 Databases: 69 = sql-prod-new (MySQL read replica, default via METABASE_DB_ID),
-434 = LSQ (leads). Any other id is rejected.
+434 = LSQ (leads), 437 = LSQ Career Services (CS referral data). Any other id is rejected.
 
 Flow: POST /api/session (user + password) -> token, then POST /api/dataset with that
 token against METABASE_DB_ID. On a 401 the tool logs in again once and retries.
@@ -26,7 +27,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TIMEOUT = 120
 
-ALLOWED_DBS = (69, 434)
+ALLOWED_DBS = (69, 434, 437)
 ALLOWED_START = ("select", "with", "show", "describe", "desc", "explain")
 FORBIDDEN = re.compile(
     r"\b(insert|update|delete|drop|alter|create|truncate|replace|grant|revoke|"
