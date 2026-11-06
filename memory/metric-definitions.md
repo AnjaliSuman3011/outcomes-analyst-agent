@@ -4,7 +4,35 @@ Data access: Metabase session login, MySQL read replica, DB id 69 (`tools/metaba
 LSQ (leads) lives in a **different Metabase DB, id 434** — use `--db 434` (access confirmed).
 LSQ Career Services (referral data) is **DB 437** — use `--db 437` (access confirmed Nov 6 2026).
 
-## 1. Active JDs (monthly) — LOCKED (v1)
+## 1. Active JD (monthly) — LOCKED (v1, corrected 2026-11-06). "JD Received" is the SAME metric (merged; one entry).
+**Active JD = count of Hiring Request Ids created in the month** (IST). Primary source: DB 69 `hiring_request` created (`created_at`,
+= `posted_at` month in every month checked), excluding the test companies ("Dummy Company (CS Onboarding)", "test", "TIF labs (Fullstack)",
+"TEST_COMPANY", "test hr creation", "test child"). Cross-check: LSQ first StageChange -> JD Received timestamp
+(`ProspectActivityEntityAudit_Base`, Event='StageChange', NewData='JD Received', DB 434), hiring request id in `mx_Custom_42`.
+**12-month series (queried Nov 6 2026), DB 69 | LSQ stage-event | LSQ with an HR id:**
+Nov-25 257 | 266 | 257 ; Dec 309 | 305 | 303 ; Jan-26 308 | 308 | 305 ; Feb 235 | 234 | 233 ; Mar 262 | 260 | 258 ; Apr 211 | 206 | 204 ;
+May 240 | 248 | 239 ; Jun 235 | 239 | 235 ; Jul 230 | 235 | 230 ; Aug 145 | 146 | 145 ; Sep 185 | 184 | 183 ; Oct 182 | 182 | 180 ; Nov MTD (6th) 24 | 24 | 24.
+**Agreement:** NOT identical. LSQ stage-event minus DB 69 ranges -5..+9 per month (<=3.5%): exact in Jan and Oct, within 1 in Feb/Aug/Sep.
+Some LSQ events have no HR id (Nov-25: 9, May: 9). Aug-Oct id sets: 508 ids in both, 0 LSQ-only, 4 DB-only. **DB 69 is authoritative;**
+LSQ is corroboration. Aug 145/146, Sep 185/184, Oct 182/182 (the expected 146/184/182 is the LSQ column; DB 69 reads 145/185/182).
+State the as-of date: the current month grows while open (the older definition's Oct was 64 -> 72 as the month filled).
+**Cuts (apply to Active JD).** Oct 2026 shown (182 JDs; 180 join to an LSQ opportunity by HR id):
+- Channel = Medium x Lead Gen POC: Self x blank 177 | Leadgen x Sahil 2 | Leadgen x blank 1. **~98% of Active JDs arrive as Medium 'Self'** (created at
+  JD Received), NOT via the Bot/Manual sourcing channels (those ~2,900 sourced rows/month are a separate population; see LSQ section).
+- Track (LSQ `mx_Custom_44`): Fullstack 59, QA 40, Data Analytics 38, Backend 35, Frontend 8.
+- Owner: LSQ Owner = Akshay khanwalkar 84, Nidhi Desai 80, Nisha V 15, Hamdan Khan 1. DB 69 `hiring_request_owner` differs (vaisakh unnikrishnan 33,
+  Hamdan Khan 33, Ayushi bhardwaj 27, Deekshitha 24, Manoj Chintada 22 ...): different field, state which is used.
+- Location (LSQ `mx_Custom_15`): Bengaluru 61, blank 19, Mumbai 15, Noida 12, Gurgaon 11, Chennai 10, Hyderabad 8, Pune 8.
+- CTC (DB 69 max_compensation_in_lpa band): 8+ LPA 105, 5-8 LPA 48, 3-5 LPA 29, under 3 / blank 0.
+- Unavailable (data empty): Desired Techstack, company techstack, in-JD funnel (shared/shortlisted/offered/rejected).
+**Supersession note:** the old "Active JD" series (Oct-25 63* | Nov 117 | Dec 115 | Jan 136 | Feb 108 | Mar 115 | Apr 106 | May 103 | Jun 97 |
+Jul 98 | Aug 53 | Sep 65 | Oct 72; defined as the first audit time of a scheduled non-screening interview round) was a NARROWER population: JDs that
+have moved PAST JD Received. The earlier August-drop analysis (53, activation 0.37) referred to THAT population, not to Active JD as now defined
+(Aug 145 vs Jul 230 = -37%, which the earlier note had already seen as the upstream JD-received drop). Old/new ratio ~0.4 (activation).
+**Old 72-population toggle (PENDING USER):** drop it, OR keep under a name the user gives (source: DB 69 audit definition retained in 1-OLD below).
+Until answered it is retained but must never be called "Active JD".
+
+## 1-OLD. "Active JDs" 53/65/72 population (JDs past JD Received) — SUPERSEDED 2026-11-06; retained ONLY pending the user's drop/keep(+name) toggle. Do NOT report as 'Active JD'.
 Canonical source: stable card **7836** "All active JD's_2026" (production, Metabase DB 69).
 - **Use the stable definition, never the live one** (7295 / 7845). The live version adds
   `stage NOT REGEXP 'closed'` on the *current* stage, so past months re-compute as JDs close.
@@ -49,7 +77,7 @@ a data-signature test. The active date is not set by a cron; it is derived at qu
 - The drop shows upstream too: JDs received 230 -> 145 (-37%), JDs with new qualifying rounds ~44/wk -> ~26/wk.
 - Activation (active / received) has no cliff: Jul 0.43, Aug 0.37, Sep 0.35, Oct 0.40 (range 0.33-0.50).
 
-## 1b. JD Received (monthly) -- PROVISIONAL PROXY, NOT LOCKED
+## 1b-OLD. JD Received proxy -- MERGED into the Active JD entry (section 1)
 Proxy = `hiring_request` rows created in the month (IST), excluding the test-company list. (posted_at gives the
 same counts for Oct 2025-Oct 2026.) Not reconciled to any team figure. Series (Nov 4 2026):
 Oct-25 190 | Nov 257 | Dec 309 | Jan-26 308 | Feb 235 | Mar 262 | Apr 211 | May 240 | Jun 235 | Jul 230 |
@@ -249,3 +277,8 @@ Stage distribution (all-time): Needs Alignment ~35.8k, In Progress 13.4k, Junk 1
 Tracker Shared 174, Opt In Shared 37, Drive Ongoing 44, Won With Offers 6, Won Without Offers 16 (Status=Won 70 all-time).
 Cuts that work today: Medium, Platform, POC, Owner, Track (Oct JD-received: FullStack 60, Data Analytics 39, QA 39, Backend 35, Frontend 8),
 Location, CTC, Role (sparse: populated on 220 of 2,928 Oct rows). Cuts that do NOT work: Desired Techstack, in-JD funnel, company (sparse).
+
+## Correction 2026-11-06 to the LSQ section above
+Its "#2 NOT LOCKED" and "JD Received LOCKED" entries are merged into section 1 (Active JD = JD Received = Hiring Request Id created). The
+v1 set is now: JDs Sourced + channel (Medium x POC), Active JD (= JD Received), Interview rounds, Offers (Crio-only), Pool (sheet-sourced).
+Sourced -> Active conversion remains NOT a conversion rate (separate populations).

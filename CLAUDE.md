@@ -115,8 +115,8 @@ numbers are reliable enough to use in reviews.
 
 **v1 scope — answers only these 5 questions:**
 1. **Leads Generated** in a month = JDs/Opportunities sourced (LSQ), split by channel (Manual / Bot / Self). Not student leads.
-2. **Active JDs** in a month (total only — no channel split exists in the data; scope closed). Active JD ≠
-   JD Received (they differ ~2x) — never substitute one for the other.
+2. **Active JDs** in a month = Hiring Request Ids created in the month (DB 69, cross-checked to LSQ). "JD Received" is the
+   SAME metric. The old 53/65/72 series is a superseded narrower population (see `memory/metric-definitions.md`).
 3. **Interview rounds:** R1 Completed, total R2, total R3-and-above.
 4. **Total Users in Pool** — sheet-sourced (Referral Candidates "Eligible Candidates", Looking for Job + Offered), hand-captured month-end snapshot; not a DB query; never sum across months.
 5. **Offers** = **Crio offers only** in v1 (Self offers are not in any queryable source). Always say so;
