@@ -114,7 +114,7 @@ numbers are reliable enough to use in reviews.
 **Users:** the Outcomes team and their managers.
 
 **v1 scope — answers only these 5 questions:**
-1. **Leads Generated** in a month, split by channel (Manual / Bot / Self).
+1. **Leads Generated** in a month = JDs/Opportunities sourced (LSQ), split by channel (Manual / Bot / Self). Not student leads.
 2. **Active JDs** in a month (total only — no channel split exists in the data; scope closed). Active JD ≠
    JD Received (they differ ~2x) — never substitute one for the other.
 3. **Interview rounds:** R1 Completed, total R2, total R3-and-above.

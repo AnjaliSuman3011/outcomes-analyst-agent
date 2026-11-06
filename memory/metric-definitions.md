@@ -200,3 +200,52 @@ Caveats on this lock: Pool is hand-captured from a sheet (current counts user-su
 validation is internal-consistency only, pending team-confirmed answers; Leads channel sums can exceed row totals in
 months where Self overlaps Manual/Bot (May/Jun 2026); per-BD calls/connect% (Q19-20) are outside v1;
 Active JD Oct sheet 61 vs production 72 remains a recorded discrepancy.
+
+## LSQ OPPORTUNITY METRICS — closed 2026-11-06 (read-only; verified via API labels + DB 434 replica)
+**Access:** LSQ REST API (acct 71599, host api-in21) via `tools/lsq_client.py`: GET-only, allow-listed read endpoints, keys in
+git-ignored `.env`, attended use only. API used to CONFIRM field labels (GetOpportunityDetails). Bulk series come from the DB 434
+replica (self-refreshing, rows stamped within minutes): ~70k opportunities cannot be fetched one-by-one through the API.
+
+### Confirmed field map (API labels; the earlier replica guesses were partly WRONG)
+Sourced date = `CreatedOn` (UTC; convert to IST) | Stage = `mx_Custom_2` "Stage" | Medium = `mx_Custom_45` | Platform = `mx_Custom_46`
+(LinkedIn…) | Lead Gen POC = `mx_Custom_50` | Track = `mx_Custom_44` (NOT mx_Custom_1, which is Opportunity Name) |
+Desired Techstack = `mx_Custom_60` (EMPTY, 0 rows ever) | Hiring Request Id = `mx_Custom_42` | Job Role `mx_Custom_52` |
+Location `mx_Custom_15` | CTC `mx_Custom_24/25` | Openings `mx_Custom_16` | Exp `mx_Custom_32/33` | Grad year `mx_Custom_34` |
+Owner = `Owner` (user GUID) | Status = `Status` (Open/Lost/Won). `mx_Custom_54` "Opportunity Stage" is a DIFFERENT sparse field
+(blank on 42k rows, 6 values): do not use it as the stage. Stage values include two spellings, "Needs Allignment" (35,777) and
+"Needs Alignment" (60): normalise. Stage field also holds junk values ("Scraping_Tool" 6, blank 370).
+Stage history: `ProspectActivityEntityAudit_Base` (ActivityEvent 12000, Event='StageChange', SchemaName mx_Custom_2; NewData = new stage,
+CreatedOn UTC), 35,458 events since 2024-02-12. NOT reachable: in-JD funnel (Profiles Shared/Shortlisted/Offered/Rejected, 0 of 7,121
+JD-stage opps), Desired Techstack, `JD_Stage_Hit` (blank on 49,731 of 50,030 leads), Company object tables (0 rows; company text on
+12k of 50k leads, `mx_Sourcing_Channel` 27 rows).
+
+### #1 JDs Sourced (= the old "Leads Generated") — LOCKED
+Count of Opportunities (ActivityEvent 12000) by `CreatedOn` in IST month. **RECONCILED EXACTLY**: the old "Leads" series was always these
+Opportunity rows (JDs sourced), never student leads; no separate student-leads object exists. Channel split rule in §4 stands
+(Manual = POC 'Sahil', Bot = POC 'Scraping_Tool', Self = Medium 'Self'). Medium alone is NOT the channel: Medium 'Leadgen' (Oct 2,312)
+mixes Manual 792 + Bot 1,520; Medium 'Scraping_Tool' (Oct 430, new) is Bot via POC. Check: Aug 812/1,897/122, Sep 719/2,880/174,
+Oct 792/1,950/181 all reproduced from Medium x POC. All-time Medium: Leadgen 56,558, Scraping_Tool 7,697, Self 5,789, Self_placed_offer 99,
+Marketing 67, Incoming 25 (tiny, inbound), Internal_Referral 4, blank 300.
+Sourced by month (Oct-25..Nov-6): 1,754 | 1,570 | 1,814 | 1,596 | 1,729 | 2,550 | 2,287 | 3,041 | 2,540 | 2,540 | 2,835 | 3,794 | 2,928 | 751(MTD).
+
+### #2 "Active JDs = ever reached JD Received" on LSQ — NOT LOCKED (four-way reconciliation FAILS)
+LSQ stage-event series (first change to JD Received): Oct-25 195 | Nov 266 | Dec 305 | Jan 308 | Feb 234 | Mar 260 | Apr 206 | May 248 |
+Jun 239 | Jul 235 | Aug 146 | Sep 184 | Oct 182 | Nov MTD 21. This does NOT reproduce Aug 53 / Sep 65 / Oct 72. It reproduces **JD Received**
+(DB 69 hiring_request created: Aug 145, Sep 185, Oct 182). Id check Aug-Oct: LSQ Hiring Request Ids 508 distinct vs DB 69 hiring_request 512:
+508 in both, 0 LSQ-only, 4 DB-only. DB 69 Active JDs (190) overlap LSQ's JD-Received ids 176/190. JD_Stage_Hit unusable (above).
+**Authoritative for Active JDs = DB 69 audit definition (§1: Oct 72).** In LSQ, "JD Received" = the company's JD arrived, i.e. the
+stage the team calls JD Received, NOT the later "active" (first scheduled non-screening round) state.
+
+### JD Received — LOCKED (promotes §1b from provisional)
+Two independent sources agree: DB 69 `hiring_request` created in month (excl. test companies) and LSQ first stage-change to JD Received
+(within +-6 each month, id sets 508/512). Series in §1b / above. Primary = DB 69; LSQ = corroboration.
+
+### #3 Sourced -> Active conversion — NOT LOCKED
+Not a cohort funnel. 95-100% of JD-Received opportunities reach that stage within 1 day of creation (Aug-Oct avg 0.0-0.3 days): they are
+created at JD Received, a different population from the ~2,900/month scraped "Needs Alignment" rows. Owners also differ (sourcing BDs vs
+CS owners; Oct: Nisha V owns 15 of 181 JD-received). So Active/Sourced, JD Received/Sourced (Oct 6.2%, Sep 4.9%, Aug 5.1%) and per-BD
+sourced->active conversion are volume ratios of two populations, not conversion rates. Do not present them as conversion.
+Stage distribution (all-time): Needs Alignment ~35.8k, In Progress 13.4k, Junk 12.0k, JD Received 6.9k, Couldn't Connect 0.9k,
+Tracker Shared 174, Opt In Shared 37, Drive Ongoing 44, Won With Offers 6, Won Without Offers 16 (Status=Won 70 all-time).
+Cuts that work today: Medium, Platform, POC, Owner, Track (Oct JD-received: FullStack 60, Data Analytics 39, QA 39, Backend 35, Frontend 8),
+Location, CTC, Role (sparse: populated on 220 of 2,928 Oct rows). Cuts that do NOT work: Desired Techstack, in-JD funnel, company (sparse).
