@@ -27,3 +27,6 @@ Thumbs.db
 
 # ---- Claude Code local state ----
 .claude/
+
+# ---- Bridge logs (contain query text) ----
+logs/

@@ -16,7 +16,8 @@ limited to SELECT on DB 69 and 434 with a read-only Metabase user.
 **Verdict: WRAPPER NEEDED.** Keep the repo as the engine and put a thin, read-only service in front of it. A prompt alone cannot make
 a Project read-only; the guarantee must be structural (code and database permissions), as with `tools/lsq_client.py`.
 
-## 2. What to build (I can build it in the repo on your go-ahead; it is not built yet)
+## 2. The bridge (BUILT 2026-11-13: `tools/readonly_bridge.py`; run it with `deploy/BRIDGE_RUN.md`)
+The design notes below describe what it does; first round runs on the Mac behind a tunnel.
 One tiny HTTPS service exposing a single read tool `run_readonly_sql(db, sql)`:
 - Reuses `assert_read_only` and the DB allow-list; allow only **69 and 434** (leave 437 out: Pool is sheet-sourced).
 - **Add** (the current guard is regex-only): a function deny-list (`SLEEP`, `BENCHMARK`, `LOAD_FILE`, `GET_LOCK`), a 30s statement timeout,
